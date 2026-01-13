@@ -1,8 +1,6 @@
 #include "HtmlWallpaper.h"
 #include "Wallpaper.h"
 
-#include <WebView2.h>
-
 #define WM_NMICON WM_USER+1
 
 const TCHAR szTitle[] = _T("HtmlWallpaper");

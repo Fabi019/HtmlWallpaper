@@ -13,27 +13,12 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files
 #include <windows.h>
+#include <tchar.h>
+#include <shellapi.h>
 // C RunTime Header Files
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
-#include <tchar.h>
-#include <shellapi.h>
 
 #include "resource.h"
 
-#ifdef _DEBUG
-inline void DbgPrint(const TCHAR* fmt, ...)
-{
-    static TCHAR buffer[256];
-
-    va_list args;
-    va_start(args, fmt);
-    _vstprintf_s(buffer, sizeof(buffer) / sizeof(TCHAR), fmt, args);
-    va_end(args);
-
-    OutputDebugString(buffer);
-}
-#else
-inline void DbgPrint(const TCHAR* fmt, ...) {}
-#endif

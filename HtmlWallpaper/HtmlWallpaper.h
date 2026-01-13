@@ -2,7 +2,7 @@
 
 #include "stdafx.h"
 
-inline int __stdcall wWinMainCRTStartup()
+int __stdcall wWinMainCRTStartup()
 {
     return _tWinMain(GetModuleHandle(NULL), 0, 0, 0);
 }
