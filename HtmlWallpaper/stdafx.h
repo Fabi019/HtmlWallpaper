@@ -20,7 +20,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include <tchar.h>
 #include <shellapi.h>
 
-//#include "resource.h"
+#include "resource.h"
 
 #ifdef _DEBUG
 inline void DbgPrint(const TCHAR* fmt, ...)

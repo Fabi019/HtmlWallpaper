@@ -81,8 +81,8 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	wallpaper.Initialize(wcex.lpszClassName, hInstance);
     s_wallpaper = &wallpaper;
 
-    s_icon = LoadIcon(wcex.hInstance, IDI_APPLICATION);
-    s_iconDisabled = LoadIcon(wcex.hInstance, IDI_HAND);
+    s_icon = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_ICON));
+    s_iconDisabled = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_ICON1));
 
     // Initialize NOTIFYICONDATA structure
     s_nid.cbSize = sizeof(NOTIFYICONDATA);
