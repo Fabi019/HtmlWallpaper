@@ -6,6 +6,10 @@
 const TCHAR szTitle[] = _T("HtmlWallpaper");
 const TCHAR szSettingsFile[] = _T("settings.ini");
 const TCHAR szCategory[] = _T("Settings");
+const TCHAR szUrl[] = _T("Url");
+const TCHAR szClearCache[] = _T("ClearCache");
+const TCHAR szAutoStart[] = _T("AutoStart");
+const TCHAR szEffMode[] = _T("EfficiencyMode");
 
 static UINT s_uTaskbarRestart;
 static NOTIFYICONDATA s_nid;
@@ -16,10 +20,11 @@ static HICON s_iconDisabled = NULL;
 static TCHAR s_settingsFile[MAX_PATH];
 static BOOL s_disabled;
 static TCHAR s_url[MAX_PATH];
+static BOOL s_clearCache;
 static BOOL s_efficiencyMode;
 static BOOL s_autoRun;
 
-static Wallpaper* s_wallpaper;
+static Wallpaper* s_wallpaper = nullptr;
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -46,7 +51,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     SetStartup(s_autoRun);
     SetEfficiencyMode(s_efficiencyMode);
 
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     if (FAILED(hr)) {
         MessageBox(nullptr, L"COM init failed", L"Error", MB_ICONERROR);
         return false;
@@ -98,8 +103,8 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
     // Set up wallpaper
     Wallpaper wallpaper{ s_url };
-    wallpaper.Initialize(wcex.lpszClassName, hInstance);
     s_wallpaper = &wallpaper;
+    wallpaper.Initialize(wcex.lpszClassName, hInstance);
 
     // Main message loop
     MSG msg;
@@ -108,11 +113,15 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
         DispatchMessage(&msg);
     }
 
+    s_wallpaper = nullptr;
+    wallpaper.Uninitialize();
+    if (s_clearCache) {
+        ClearCache();
+    }
+
     // Clean up and remove the tray icon
     Shell_NotifyIcon(NIM_DELETE, &s_nid);
     UnregisterClass(wcex.lpszClassName, wcex.hInstance);
-
-    s_wallpaper = nullptr;
 
     // Release the mutex before exiting
     if (s_mutex)
@@ -224,18 +233,21 @@ VOID InitSettings(BOOL createNew) {
 
     if (createNew)
     {
-        WritePrivateProfileString(szCategory, _T("Url"), _T("https://flux.sandydoo.me"), s_settingsFile);
-        WritePrivateProfileString(szCategory, _T("AutoStart"), _T("0"), s_settingsFile);
-        WritePrivateProfileString(szCategory, _T("EfficiencyMode"), _T("1"), s_settingsFile);
+        WritePrivateProfileString(szCategory, szUrl, _T("https://flux.sandydoo.me"), s_settingsFile);
+		WritePrivateProfileString(szCategory, szClearCache, _T("0"), s_settingsFile);
+        WritePrivateProfileString(szCategory, szAutoStart, _T("0"), s_settingsFile);
+        WritePrivateProfileString(szCategory, szEffMode, _T("1"), s_settingsFile);
         return;
     }
 
     TCHAR szValue[MAX_PATH];
-    GetPrivateProfileString(szCategory, _T("Url"), _T("https://flux.sandydoo.me"), szValue, MAX_PATH, s_settingsFile);
+    GetPrivateProfileString(szCategory, szUrl, _T("https://flux.sandydoo.me"), szValue, MAX_PATH, s_settingsFile);
 	_tcscpy_s(s_url, MAX_PATH, szValue);
-    GetPrivateProfileString(szCategory, _T("AutoStart"), _T("0"), szValue, 2, s_settingsFile);
+    GetPrivateProfileString(szCategory, szClearCache, _T("0"), szValue, 2, s_settingsFile);
+    s_clearCache = !!_tstoi(szValue);
+    GetPrivateProfileString(szCategory, szAutoStart, _T("0"), szValue, 2, s_settingsFile);
     s_autoRun = !!_tstoi(szValue);
-    GetPrivateProfileString(szCategory, _T("EfficiencyMode"), _T("1"), szValue, 2, s_settingsFile);
+    GetPrivateProfileString(szCategory, szEffMode, _T("1"), szValue, 2, s_settingsFile);
     s_efficiencyMode = !!_tstoi(szValue);
 }
 
@@ -296,5 +308,38 @@ VOID Toggle()
     Shell_NotifyIcon(NIM_MODIFY, &s_nid);
     if (s_wallpaper) {
         s_wallpaper->Disable(s_disabled);
+	}
+}
+
+VOID ClearCache()
+{
+    TCHAR szPath[MAX_PATH]{};
+    GetModuleFileName(NULL, szPath, MAX_PATH);
+	_tcscat_s(szPath, MAX_PATH, _T(".WebView2"));
+
+    TCHAR userDataFolder[MAX_PATH + 2]{};
+    _wfullpath(userDataFolder, szPath, MAX_PATH);
+
+    int tries = 10;
+    while (tries --> 0) {
+        IFileOperation* pFileOp = nullptr;
+        HRESULT hr = CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&pFileOp));
+        if (FAILED(hr)) return;
+        pFileOp->SetOperationFlags(FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI);
+
+        IShellItem* pItem = nullptr;
+        SHCreateItemFromParsingName(userDataFolder, nullptr, IID_PPV_ARGS(&pItem));
+
+        pFileOp->DeleteItem(pItem, nullptr);
+        pItem->Release();
+
+        pFileOp->PerformOperations();
+
+        BOOL aborted = FALSE;
+        pFileOp->GetAnyOperationsAborted(&aborted);
+        pFileOp->Release();
+
+		if (!aborted) break;
+		else Sleep(100);
 	}
 }

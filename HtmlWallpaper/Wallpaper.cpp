@@ -6,12 +6,9 @@ Wallpaper::Wallpaper(const wchar_t* initial_url)
     : m_url(initial_url), m_workerW(nullptr), m_window(nullptr), m_hInstance(nullptr) {}
 
 Wallpaper::~Wallpaper() {
-    if (m_webview) m_webview->Stop();
     m_webview = nullptr;
-    if (m_controller) m_controller->Close();
     m_controller = nullptr;
     m_environment = nullptr;
-	if (m_window) DestroyWindow(m_window);
     m_window = nullptr;
 }
 
@@ -20,6 +17,12 @@ bool Wallpaper::Initialize(LPCWSTR className, HINSTANCE hInstance) {
     m_workerW = FindWorkerW();
     if (!m_workerW) return false;
     return CreateWallpaperWindow(className);
+}
+
+void Wallpaper::Uninitialize() {
+    if (m_webview) m_webview->Stop();
+    if (m_controller) m_controller->Close();
+    if (m_window) DestroyWindow(m_window);
 }
 
 HWND Wallpaper::FindWorkerW() {

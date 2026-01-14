@@ -11,6 +11,7 @@ public:
     ~Wallpaper();
 
     bool Initialize(LPCWSTR className, HINSTANCE hInstance);
+	void Uninitialize();
     bool Resize();
     bool LoadURL(const wchar_t* url);
     void Disable(bool disable) const;

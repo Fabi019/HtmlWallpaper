@@ -15,6 +15,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include <windows.h>
 #include <tchar.h>
 #include <shellapi.h>
+#include <shobjidl.h>   // IFileOperation
 // C RunTime Header Files
 #include <stdlib.h>
 #include <malloc.h>

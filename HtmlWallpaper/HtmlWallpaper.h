@@ -25,3 +25,4 @@ VOID InitSettings(BOOL createNew);
 VOID SetEfficiencyMode(BOOL enable);
 VOID SetStartup(BOOL enable);
 VOID Toggle();
+VOID ClearCache();
