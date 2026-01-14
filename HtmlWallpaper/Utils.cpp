@@ -22,18 +22,10 @@ namespace std
     using size_t = decltype(sizeof(0));
 }
 
-void* operator new(std::size_t size, const std::nothrow_t&) noexcept
-{
-    return malloc(size);
-}
+// Required by `Microsoft::WRL::Details::MakeAllocator`
+void* operator new(std::size_t size, const std::nothrow_t&) noexcept { return malloc(size); }
 
-void operator delete(void* ptr, std::size_t) noexcept
-{
-    free(ptr);
-}
-
-void operator delete[](void* ptr, std::size_t) noexcept
-{
-    free(ptr);
-}
+// Required by `Microsoft::WRL::Details::DelegateArgTraits`
+void operator delete(void* ptr, std::size_t) noexcept { free(ptr); }
+void operator delete[](void* ptr, std::size_t) noexcept { free(ptr); }
 #endif

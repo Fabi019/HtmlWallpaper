@@ -46,6 +46,12 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     SetStartup(s_autoRun);
     SetEfficiencyMode(s_efficiencyMode);
 
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr)) {
+        MessageBox(nullptr, L"COM init failed", L"Error", MB_ICONERROR);
+        return false;
+    }
+
     // Initialize variables
     WNDCLASSEX wcex = {
         sizeof(WNDCLASSEX),
@@ -75,10 +81,6 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
         return 1;
     }
 
-    Wallpaper wallpaper{s_url};
-	wallpaper.Initialize(wcex.lpszClassName, hInstance);
-    s_wallpaper = &wallpaper;
-
     s_icon = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_ICON));
     s_iconDisabled = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_ICON1));
 
@@ -94,6 +96,11 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     // Add the tray icon
     Shell_NotifyIcon(NIM_ADD, &s_nid);
 
+    // Set up wallpaper
+    Wallpaper wallpaper{ s_url };
+    wallpaper.Initialize(wcex.lpszClassName, hInstance);
+    s_wallpaper = &wallpaper;
+
     // Main message loop
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
@@ -105,6 +112,8 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     Shell_NotifyIcon(NIM_DELETE, &s_nid);
     UnregisterClass(wcex.lpszClassName, wcex.hInstance);
 
+    s_wallpaper = nullptr;
+
     // Release the mutex before exiting
     if (s_mutex)
     {
@@ -112,6 +121,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
         CloseHandle(s_mutex);
     }
 
+    CoUninitialize();
     return static_cast<int>(msg.wParam);
 }
 

@@ -4,7 +4,8 @@
 
 int __stdcall wWinMainCRTStartup()
 {
-    return _tWinMain(GetModuleHandle(NULL), 0, 0, 0);
+    exit(_tWinMain(GetModuleHandle(NULL), 0, 0, 0));
+    return 0;
 }
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,

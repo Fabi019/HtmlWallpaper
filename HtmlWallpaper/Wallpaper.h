@@ -20,8 +20,8 @@ private:
     HWND m_workerW;
     HWND m_window;
     HINSTANCE m_hInstance;
-    BOOL m_initialized{false};
 
+    Microsoft::WRL::ComPtr<ICoreWebView2Environment> m_environment;
     Microsoft::WRL::ComPtr<ICoreWebView2Controller> m_controller;
     Microsoft::WRL::ComPtr<ICoreWebView2> m_webview;
 

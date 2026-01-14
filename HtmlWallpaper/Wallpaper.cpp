@@ -6,18 +6,16 @@ Wallpaper::Wallpaper(const wchar_t* initial_url)
     : m_url(initial_url), m_workerW(nullptr), m_window(nullptr), m_hInstance(nullptr) {}
 
 Wallpaper::~Wallpaper() {
+    if (m_webview) m_webview->Stop();
+    m_webview = nullptr;
     if (m_controller) m_controller->Close();
+    m_controller = nullptr;
+    m_environment = nullptr;
 	if (m_window) DestroyWindow(m_window);
-    CoUninitialize();
+    m_window = nullptr;
 }
 
 bool Wallpaper::Initialize(LPCWSTR className, HINSTANCE hInstance) {
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-    if (FAILED(hr)) {
-        MessageBox(nullptr, L"COM init failed", L"Error", MB_ICONERROR);
-        return false;
-    }
-
     m_hInstance = hInstance;
     m_workerW = FindWorkerW();
     if (!m_workerW) return false;
@@ -68,10 +66,7 @@ bool Wallpaper::CreateWallpaperWindow(LPCWSTR className) {
 }
 
 void Wallpaper::InitWebView() {
-    CreateCoreWebView2EnvironmentWithOptions(
-        nullptr,
-        nullptr,
-        nullptr,
+    CreateCoreWebView2Environment(
         Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
             [this](HRESULT hr, ICoreWebView2Environment* env) -> HRESULT {
                 if (FAILED(hr) || !env) {
@@ -79,6 +74,7 @@ void Wallpaper::InitWebView() {
                     return hr;
                 }
 
+                m_environment = env;
                 env->CreateCoreWebView2Controller(
                     m_window,
                     Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
